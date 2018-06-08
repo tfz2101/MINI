@@ -30,6 +30,7 @@ from robot import *  # Check the robot.py tab to see how this works.
 from math import *
 from matrix import * # Check the matrix.py tab to see how this works.
 import random
+import numpy as np
 
 # This is the function you have to write. Note that measurement is a
 # single (x, y) point. This function will have to be called multiple
@@ -51,45 +52,87 @@ def polarToGrid(point):
     y = sin(angle) * d
     return (x, y)
 
+def calcPolarChangeBtw2Points(point1, point2):
+    print(point1)
+    x0, y0 = point1
+    x1, y1 = point2
 
+    opp = y1 - y0
+    adj = x1 - x0
+
+    angle = atan(float(opp)/adj)
+    d = distance_between(point1, point2)
+    return (angle, d)
 
 def estimate_next_pos(measurement, OTHER = None):
     """Estimate the next (x, y) position of the wandering Traxbot
     based on noisy (x, y) measurements."""
 
-    measurement_p = gridToPolar(measurement)
+    #OTHER = [x, P, measurement_l]
+
+
+
 
     #KALMAN MATRICIES
-    #[angle, d, bent, distance]
-    x = matrix([[0.], [0.], [0.], [0.]])  # initial state (location and velocity)
-    P = matrix([[0., 0., 0., 0.], [0., 0., 0., 0.], [0., 0., 1.5, 0.], [0., 0., 0., 1.5]])  # initial uncertainty
-    u = matrix([[0.], [0.]])  # external motion
-    F = matrix([[1., 0., 1., 0.], [0., 1., 0., 1.], [0., 0., 1., 0.], [0., 0., 0., 1.]])  # next state function
-    H = matrix([[1., 0., 0., 0.],[0., 1., 0., 0.]])  # measurement function
-    R = matrix([[1.5, 1.5]])  # measurement uncertainty
-    I = matrix([[1., 0., 0., 0.], [0., 1., 0., 0.], [0., 0., 1., 0.], [0., 0., 0., 1.]])  # identity matrix
+    #[angle, bent, distance]
 
-    angle, d = measurement_p
 
-    Z = matrix([[angle, d]])
-    y = Z - (H * x)
-    S = H * P * H.transpose() + R
-    K = P * H.transpose() * S.inverse()
-    x = x + (K * y)
+    u = matrix([[0.], [0.], [0.]])  # external motion
+    F = matrix([[1., 1., 0.], [0., 1., 0.], [0., 0., 1.]])  # next state function
+    H = matrix([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.,]])  # measurement function
+    R = matrix([[0.2, 0.1, 0.1], [0.3, 0.1, 0.1], [0.3, 0.1, 0.3]])  # measurement uncertainty
+    I = matrix([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])  # identity matrix
 
-    P = (I - (K * H)) * P
 
-    #prediction
-    x = (F * x) + u
-    P = F * P * F.transpose()
 
-    #(angle, d) =  P
-    #xy_estimate = polarToGrid(angle, d)
+    if OTHER == None:
+        measurement_l = measurement
+        OTHER = [measurement_l]
+        return (0,0), OTHER
 
-    # You must return xy_estimate (x, y), and OTHER (even if it is None)
-    # in this order for grading purposes.
-    xy_estimate = (3.2, 9.1)
-    return xy_estimate, OTHER
+    elif len(OTHER) <= 1:
+        angle, distance = gridToPolar(measurement)
+        a0, d0 = calcPolarChangeBtw2Points(OTHER[0], measurement)
+
+        x = matrix([[angle], [a0], [d0]])  # initial state (location and velocity)
+        P = matrix([[0.1, 0.1, 0.1], [0.1, 0.3, 0.1], [0.2, 0.1, 0.5]])  # initial uncertainty
+        OTHER = [x, P, measurement]
+        return (0,0), OTHER
+
+    elif len(OTHER) <= 3:
+        angle, distance = gridToPolar(measurement)
+        a0, d0 = calcPolarChangeBtw2Points(OTHER[2], measurement)
+        Z = matrix([[angle], [a0], [d0]])
+
+        x = OTHER[0]
+        P = OTHER[1]
+
+        y = Z - (H * x)
+        S = H * P * H.transpose() + R
+        K = P * H.transpose() * S.inverse()
+        x = x + (K * y)
+        #print('K * y', (K * y))
+        P = (I - (K * H)) * P
+
+        #prediction
+        x_n = (F * x) + u
+        P_n = F * P * F.transpose()
+
+
+        print('xn', x_n.value)
+        OTHER = [x_n, P_n, measurement]
+
+        angle = x_n.value[0][0]
+        #print('angle', x_n.value[0][0])
+        d = x_n.value[1][0]
+        #print('d', x_n.value[1][0])
+
+        xy_estimate = polarToGrid((angle, d))
+
+        # You must return xy_estimate (x, y), and OTHER (even if it is None)
+        # in this order for grading purposes.
+
+        return xy_estimate, OTHER
 
 # A helper function you may find useful.
 def distance_between(point1, point2):
@@ -138,7 +181,7 @@ test_target = robot(2.1, 4.3, 0.5, 2*pi / 34.0, 1.5)
 measurement_noise = 0.05 * test_target.distance
 test_target.set_noise(0.0, 0.0, measurement_noise)
 
-demo_grading(naive_next_pos, test_target)
+demo_grading(estimate_next_pos, test_target)
 
 
 
