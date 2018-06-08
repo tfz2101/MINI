@@ -45,6 +45,13 @@ def gridToPolar(point):
     return (angle, d)
 
 
+def polarToGrid(point):
+    angle, d = point
+    x = cos(angle) * d
+    y = sin(angle) * d
+    return (x, y)
+
+
 
 def estimate_next_pos(measurement, OTHER = None):
     """Estimate the next (x, y) position of the wandering Traxbot
@@ -52,7 +59,32 @@ def estimate_next_pos(measurement, OTHER = None):
 
     measurement_p = gridToPolar(measurement)
 
+    #KALMAN MATRICIES
+    #[angle, d, bent, distance]
+    x = matrix([[0.], [0.], [0.], [0.]])  # initial state (location and velocity)
+    P = matrix([[0., 0., 0., 0.], [0., 0., 0., 0.], [0., 0., 1.5, 0.], [0., 0., 0., 1.5]])  # initial uncertainty
+    u = matrix([[0.], [0.]])  # external motion
+    F = matrix([[1., 0., 1., 0.], [0., 1., 0., 1.], [0., 0., 1., 0.], [0., 0., 0., 1.]])  # next state function
+    H = matrix([[1., 0., 0., 0.],[0., 1., 0., 0.]])  # measurement function
+    R = matrix([[1.5, 1.5]])  # measurement uncertainty
+    I = matrix([[1., 0., 0., 0.], [0., 1., 0., 0.], [0., 0., 1., 0.], [0., 0., 0., 1.]])  # identity matrix
 
+    angle, d = measurement_p
+
+    Z = matrix([[angle, d]])
+    y = Z - (H * x)
+    S = H * P * H.transpose() + R
+    K = P * H.transpose() * S.inverse()
+    x = x + (K * y)
+
+    P = (I - (K * H)) * P
+
+    #prediction
+    x = (F * x) + u
+    P = F * P * F.transpose()
+
+    #(angle, d) =  P
+    #xy_estimate = polarToGrid(angle, d)
 
     # You must return xy_estimate (x, y), and OTHER (even if it is None)
     # in this order for grading purposes.
