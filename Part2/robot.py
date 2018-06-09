@@ -1,6 +1,30 @@
 from math import *
 import random
 
+
+def gridToPolar(point):
+    x, y = point
+    angle = atan(float(y)/x)
+    d = distance_between((0,0), point)
+    return (angle, d)
+
+
+def polarToGrid(point):
+    angle, d = point
+    x = cos(angle) * d
+    y = sin(angle) * d
+    return (x, y)
+
+def distance_between(point1, point2):
+    """Computes distance between point1 and point2. Points are (x, y) pairs."""
+    x1, y1 = point1
+    x2, y2 = point2
+    return sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+
+
+
+
+
 # helper function to map all angles onto [-pi, pi]
 def angle_trunc(a):
     while a < 0.0:
@@ -44,11 +68,13 @@ class robot:
         distance = max(0.0, distance)
 
         # Execute motion
+
         self.heading += turning
+
         self.heading = angle_trunc(self.heading)
         self.x += distance * cos(self.heading)
         self.y += distance * sin(self.heading)
-
+        print('robot angle', self.heading)
     def move_in_circle(self):
         """This function is used to advance the runaway target bot."""
         self.move(self.turning, self.distance)
