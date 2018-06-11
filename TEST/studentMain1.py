@@ -67,6 +67,34 @@ import random
 # next position. The OTHER variable that your function returns will be
 # passed back to your function the next time it is called. You can use
 # this to keep track of important information over time.
+
+
+def calcPolarChangeBtw2Points(point1, point2):
+    x0, y0 = point1
+    x1, y1 = point2
+
+
+    opp = y1 - y0
+    adj = x1 - x0
+
+    if opp > 0 and adj > 0:
+        angle = atan(float(opp)/adj)
+    if opp > 0 and adj < 0:
+        angle = atan(float(opp) / adj)
+        angle = pi + angle
+    if opp < 0 and adj < 0:
+        angle = atan(float(opp) / adj)
+        angle = pi + angle
+    if opp < 0 and adj > 0:
+        angle = atan(float(opp) / adj)
+        angle = 2 * pi + angle
+
+    d = distance_between(point1, point2)
+    return (angle, d)
+
+
+
+
 def estimate_next_pos(measurement, OTHER=None):
     """Estimate the next (x, y) position of the wandering Traxbot
     based on noisy (x, y) measurements."""
@@ -94,7 +122,10 @@ def estimate_next_pos(measurement, OTHER=None):
         x1, y1 = measurement
 
         opposite = y1 - y0
-        angle_0 = asin(float(opposite) / d)
+        #angle_0 = asin(float(opposite) / d)
+
+        angle_0, d = calcPolarChangeBtw2Points(OTHER[0],measurement)
+
         print('angle_0', angle_0)
         r = angle_0 - OTHER[2]
 

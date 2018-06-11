@@ -235,6 +235,7 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
 
     move_measurement = measurement
 
+
     u = matrix([[0.], [0.], [0.]])  # external motion
     F = matrix([[1., 1., 0.], [0., 1., 0.], [0., 0., 1.]])  # next state function
     H = matrix([[1., 0., 0.], [0., 1., 0.], [0., 0., 1., ]])  # measurement function
@@ -259,13 +260,13 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
     elif len(OTHER) <= 7:
 
         angle, distance = calcPolarChangeBtw2Points(OTHER[2], measurement)
-        print('unaltered actual angle', angle)
+        #print('unaltered actual angle', angle)
         angle = angle_trunc(angle)
         print(angle, 'actual angle')
 
         a0 = angle_trunc(angle - OTHER[3])
         d0 = distance_between(OTHER[2], measurement)
-        print('a0', a0)
+        #print('a0', a0)
         #print('d0', d0)
 
         x = OTHER[0]
@@ -297,11 +298,11 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
             Z = matrix([[angle], [a0], [d0]])
 
             y = Z - (H * x)
-            print('y', y)
+            #print('y', y)
             S = H * P * H.transpose() + R
             K = P * H.transpose() * S.inverse()
             x = x + (K * y)
-            print('Kalman Gain', (K * y))
+            #print('Kalman Gain', (K * y))
             P = (I - (K * H)) * P
 
             # prediction
@@ -322,16 +323,15 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
             Y_n += x_n.value[2][0] * sin(x_n.value[0][0])
 
         target_distance = distance_between(hunter_position, measurement)
+        print('target position', measurement)
+        print('hunter position', hunter_position)
         print('distance btw bots', target_distance)
         steps_ahead = 1
-        initial_distance = OTHER[6]
-        if target_distance >= initial_distance * 0.75:
-            steps_ahead = 5
-        elif target_distance >= initial_distance * 0.5:
-            steps_ahead = 4
-        elif target_distance >= initial_distance * 0.25:
+        if target_distance >= hunter.distance * 2:
+            steps_ahead = 3
+        elif target_distance >= hunter.distance * 1.0:
             steps_ahead = 2
-        elif target_distance >= initial_distance * 0.1:
+        elif target_distance >= 0.0:
             steps_ahead = 1
 
         print('steps ahead', steps_ahead)
@@ -346,11 +346,27 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
         move_measurement = simbot.sense()
 
 
-    heading_to_target, distance_meh = calcPolarChangeBtw2Points(hunter_position, move_measurement)
-    heading_difference = heading_to_target - hunter_heading
+
+    heading_to_target, move_distance = calcPolarChangeBtw2Points(hunter_position, move_measurement)
+    heading_to_target = angle_trunc(heading_to_target)
+
+    print('current hunter heading', hunter_heading)
+    print('current angle target', heading_to_target)
+    '''
+    if heading_to_target * hunter_heading >= 0:
+        heading_difference = heading_to_target - hunter_heading
+    else:
+        if heading_to_target < 0 and hunter_heading > 0:
+            heading_difference = heading_to_target + 2*pi - hunter_heading
+        elif heading_to_target > 0 and hunter_heading < 0:
+            heading_difference = heading_to_target - 2 * pi - hunter_heading
+    
     turning = heading_difference  # turn towards the target
-    move_distance = distance_between(hunter_position, move_measurement)
+    '''
+    turning = heading_to_target - hunter_heading
+    print('how much the robot should turn', turning)
     distance = min(max_distance, move_distance)  # full speed ahead!
+
 
     return turning, distance, OTHER
 
@@ -555,21 +571,9 @@ GLOBAL_PARAMETERS = [None,
 
 
 NUM = 10
-'''
-{'test_case': 1,
- 'target_x': 6.38586153722,
- 'target_y': 13.4105567386,
- 'target_heading': 2.47241215877,
- 'target_period': -25,
- 'target_speed': 3.79845282159,
- 'hunter_x': -4.15461096841,
- 'hunter_y': -0.3225704554,
- 'hunter_heading': 2.53575760878
- }
-'''
 
 #target = robot(0.0, 10.0, 0.0, 2*pi / 30, 1.5)
-target = robot(GLOBAL_PARAMETERS[NUM]['target_x'], GLOBAL_PARAMETERS[NUM]['target_x'], GLOBAL_PARAMETERS[NUM]['target_heading'], 2*pi / GLOBAL_PARAMETERS[NUM]['target_period'], GLOBAL_PARAMETERS[NUM]['target_speed'])
+target = robot(GLOBAL_PARAMETERS[NUM]['target_x'], GLOBAL_PARAMETERS[NUM]['target_y'], GLOBAL_PARAMETERS[NUM]['target_heading'], 2*pi / GLOBAL_PARAMETERS[NUM]['target_period'], GLOBAL_PARAMETERS[NUM]['target_speed'])
 
 measurement_noise = .05*target.distance
 target.set_noise(0.0, 0.0, measurement_noise)
