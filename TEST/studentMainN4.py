@@ -328,7 +328,7 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
         print('distance btw bots', target_distance)
         steps_ahead = 1
         if target_distance >= hunter.distance * 2:
-            steps_ahead = 3
+            steps_ahead = 2
         elif target_distance >= hunter.distance * 1.0:
             steps_ahead = 2
         elif target_distance >= 0.0:
@@ -364,9 +364,9 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
     turning = heading_difference  # turn towards the target
     '''
     turning = heading_to_target - hunter_heading
+    turning = angle_trunc(turning)
     print('how much the robot should turn', turning)
     distance = min(max_distance, move_distance)  # full speed ahead!
-
 
     return turning, distance, OTHER
 
