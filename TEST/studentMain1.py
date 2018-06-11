@@ -95,6 +95,7 @@ def estimate_next_pos(measurement, OTHER=None):
 
         opposite = y1 - y0
         angle_0 = asin(float(opposite) / d)
+        print('angle_0', angle_0)
         r = angle_0 - OTHER[2]
 
         angle_n = angle_0 + r
@@ -153,7 +154,117 @@ def naive_next_pos(measurement, OTHER = None):
 
 # This is how we create a target bot. Check the robot.py file to understand
 # How the robot class behaves.
-test_target = robot(2.1, 4.3, 0.5, 2*pi / 34.0, 1.5)
+
+
+
+GLOBAL_PARAMETERS = [None,
+
+        {'test_case': 1,
+     'target_x': 6.38586153722,
+     'target_y': 13.4105567386,
+     'target_heading': 2.47241215877,
+     'target_period': -25,
+     'target_speed': 3.79845282159,
+     'hunter_x': -4.15461096841,
+     'hunter_y': -0.3225704554,
+     'hunter_heading': 2.53575760878
+    },
+    {'test_case': 2,
+     'target_x': 16.585052609,
+     'target_y': 9.0679044122,
+     'target_heading': -1.35786342037,
+     'target_period': -37,
+     'target_speed': 1.28476921126,
+     'hunter_x': 10.8662448888,
+     'hunter_y': 14.7856356957,
+     'hunter_heading': 0.356152836897
+    },
+    {'test_case': 3,
+     'target_x': 14.2062592559,
+     'target_y': -18.0245447208,
+     'target_heading': -2.38262617883,
+     'target_period': -49,
+     'target_speed': 1.83862303037,
+     'hunter_x': -2.82628668059,
+     'hunter_y': -8.94637942004,
+     'hunter_heading': -0.220346285164
+    },
+    {'test_case': 4,
+     'target_x': -11.8110077747,
+     'target_y': -18.6564535804,
+     'target_heading': -1.96611401851,
+     'target_period': 43,
+     'target_speed': 1.63703150728,
+     'hunter_x': -11.6275149175,
+     'hunter_y': 5.79288354591,
+     'hunter_heading': -0.167236690344
+    },
+    {'test_case': 5,
+     'target_x': 15.6527729222,
+     'target_y': -0.647477557818,
+     'target_heading': 2.53763865986,
+     'target_period': -25,
+     'target_speed': 3.30090641473,
+     'hunter_x': 4.89061164952,
+     'hunter_y': -3.67364934482,
+     'hunter_heading': 0.69375353171
+    },
+    {'test_case': 6,
+     'target_x': 4.19064615709,
+     'target_y': -1.18147110409,
+     'target_heading': -1.64836474843,
+     'target_period': 15,
+     'target_speed': 3.83139058798,
+     'hunter_x': 1.58465033057,
+     'hunter_y': -11.608873745,
+     'hunter_heading': -1.71836625476
+    },
+    {'test_case': 7,
+     'target_x': -14.9126298507,
+     'target_y': 9.77381651339,
+     'target_heading': -2.6049812496,
+     'target_period': 15,
+     'target_speed': 1.87228826655,
+     'hunter_x': -1.73542429642,
+     'hunter_y': 15.2209669071,
+     'hunter_heading': -3.11279669928
+    },
+    {'test_case': 8,
+     'target_x': -7.36186590331,
+     'target_y': -16.8073975689,
+     'target_heading': -0.521095102947,
+     'target_period': 16,
+     'target_speed': 1.99556521539,
+     'hunter_x': -12.4391297878,
+     'hunter_y': -17.4403250837,
+     'hunter_heading': -2.7562509168
+    },
+    {'test_case': 9,
+     'target_x': 8.12973829475,
+     'target_y': -10.7703982486,
+     'target_heading': -1.99007409394,
+     'target_period': 50,
+     'target_speed': 2.79327564984,
+     'hunter_x': -6.10424606902,
+     'hunter_y': -18.9750820343,
+     'hunter_heading': -0.0275542431845
+    },
+    {'test_case': 10,
+     'target_x': -18.2934552906,
+     'target_y': 16.3903453417,
+     'target_heading': 0.345582694568,
+     'target_period': -16,
+     'target_speed': 3.99258090205,
+     'hunter_x': -18.1103477129,
+     'hunter_y': 5.2801933801,
+     'hunter_heading': 1.29663175758
+    },
+]
+
+NUM = 2
+test_target = robot(GLOBAL_PARAMETERS[NUM]['target_x'], GLOBAL_PARAMETERS[NUM]['target_x'], GLOBAL_PARAMETERS[NUM]['target_heading'], 2*pi / GLOBAL_PARAMETERS[NUM]['target_period'], GLOBAL_PARAMETERS[NUM]['target_speed'])
+#test_target = robot(2.1, 4.3, 0.5, 2*pi / 34.0, 1.5)
+
 test_target.set_noise(0.0, 0.0, 0.0)
 
 demo_grading(estimate_next_pos, test_target)

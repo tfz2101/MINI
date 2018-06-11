@@ -238,7 +238,7 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
     u = matrix([[0.], [0.], [0.]])  # external motion
     F = matrix([[1., 1., 0.], [0., 1., 0.], [0., 0., 1.]])  # next state function
     H = matrix([[1., 0., 0.], [0., 1., 0.], [0., 0., 1., ]])  # measurement function
-    R = matrix([[3.7, 1.0, 2.0], [2.5, 2.0, 2.0], [2.5, 2.0, 3.0]])  # measurement uncertainty
+    R = matrix([[1.0, 0.3, 0.3], [1.0, 0.3, 0.3], [0.3, 0.3, 1.0]])  # measurement uncertainty
     I = matrix([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])  # identity matrix
 
     if OTHER == None:
@@ -252,7 +252,7 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
         angle = angle_trunc(angle)
 
         x = matrix([[angle], [0], [0]])  # initial state (location and velocity)
-        P = matrix([[7.0, 5.0, 2.0], [3.0, 5.0, 3.0], [4.0, 4.0, 3.0]])  # initial uncertainty
+        P = matrix([[5.0, 1.0, 1.0], [1.0, 5.0, 1.0], [1.0, 1.0, 5.0]])  # initial uncertainty
         OTHER = [x, P, measurement, angle, hunter_position, hunter_heading, OTHER[3]]
 
 
@@ -266,7 +266,7 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
         a0 = angle_trunc(angle - OTHER[3])
         d0 = distance_between(OTHER[2], measurement)
         print('a0', a0)
-        print('d0', d0)
+        #print('d0', d0)
 
         x = OTHER[0]
         P = OTHER[1]
@@ -274,7 +274,7 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
 
         resid = x.value[0][0] - angle
 
-        if abs(resid) > pi:
+        if abs(resid) > abs(4 * a0):
             print('SKIP')
 
             x_n = (F * x) + u
@@ -287,8 +287,8 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
             x_n.setValue(vals)
 
             X_n, Y_n = measurement
-            print('xn angle', x_n.value[0][0])
-            print('xn angle trunc', angle_trunc(x_n.value[0][0]))
+            #print('xn angle', x_n.value[0][0])
+            #print('xn angle trunc', angle_trunc(x_n.value[0][0]))
             print('------')
             X_n += x_n.value[2][0] * cos(x_n.value[0][0])
             Y_n += x_n.value[2][0] * sin(x_n.value[0][0])
@@ -315,8 +315,8 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
             OTHER = [x_n, P_n, measurement, angle, hunter_position, hunter_heading, OTHER[6]]
 
             X_n, Y_n = measurement
-            print('xn angle', x_n.value[0][0])
-            print('xn angle trunc', angle_trunc(x_n.value[0][0]))
+            #print('xn angle', x_n.value[0][0])
+            #print('xn angle trunc', angle_trunc(x_n.value[0][0]))
             print('------')
             X_n += x_n.value[2][0] * cos(x_n.value[0][0])
             Y_n += x_n.value[2][0] * sin(x_n.value[0][0])
@@ -394,9 +394,11 @@ def demo_grading(hunter_bot, target_bot, next_move_fcn, OTHER=None):
             distance = max_distance
 
         # We move the hunter according to your instructions
+        print('Hunter Bot Moving')
         hunter_bot.move(turning, distance)
 
         # The target continues its (nearly) circular motion.
+        print('Target Bot Moving')
         target_bot.move_in_circle()
 
         ctr += 1
@@ -549,7 +551,22 @@ GLOBAL_PARAMETERS = [None,
 ]
 
 
+
+
+
 NUM = 10
+'''
+{'test_case': 1,
+ 'target_x': 6.38586153722,
+ 'target_y': 13.4105567386,
+ 'target_heading': 2.47241215877,
+ 'target_period': -25,
+ 'target_speed': 3.79845282159,
+ 'hunter_x': -4.15461096841,
+ 'hunter_y': -0.3225704554,
+ 'hunter_heading': 2.53575760878
+ }
+'''
 
 #target = robot(0.0, 10.0, 0.0, 2*pi / 30, 1.5)
 target = robot(GLOBAL_PARAMETERS[NUM]['target_x'], GLOBAL_PARAMETERS[NUM]['target_x'], GLOBAL_PARAMETERS[NUM]['target_heading'], 2*pi / GLOBAL_PARAMETERS[NUM]['target_period'], GLOBAL_PARAMETERS[NUM]['target_speed'])

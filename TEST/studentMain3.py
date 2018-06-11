@@ -238,7 +238,7 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
     u = matrix([[0.], [0.], [0.]])  # external motion
     F = matrix([[1., 1., 0.], [0., 1., 0.], [0., 0., 1.]])  # next state function
     H = matrix([[1., 0., 0.], [0., 1., 0.], [0., 0., 1., ]])  # measurement function
-    R = matrix([[3.7, 1.0, 2.0], [2.5, 2.0, 2.0], [2.5, 2.0, 3.0]])  # measurement uncertainty
+    R = matrix([[0.3, 0.1, 0.1], [0.1, 0.3, 0.1], [0.1, 0.1, 0.3]])  # measurement uncertainty
     I = matrix([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])  # identity matrix
 
     if OTHER == None:
@@ -251,7 +251,7 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
         angle = angle_trunc(angle)
 
         x = matrix([[angle], [0], [0]])  # initial state (location and velocity)
-        P = matrix([[7.0, 5.0, 2.0], [3.0, 5.0, 3.0], [4.0, 4.0, 3.0]])  # initial uncertainty
+        P = matrix([[7.0, 2.0, 2.0], [2.0, 7.0, 2.0], [2.0, 2.0, 7.0]])  # initial uncertainty
         OTHER = [x, P, measurement, angle, hunter_position, hunter_heading]
 
 
