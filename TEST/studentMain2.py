@@ -184,7 +184,6 @@ class matrix:
 
 
 
-
 def angle_trunc(a):
     while a < 0.0:
         a += pi * 2
@@ -233,8 +232,6 @@ def estimate_next_pos(measurement, OTHER = None):
 
     #OTHER = [x, P, measurement_l, angle_l]
 
-    #angle, distance = gridToPolar(measurement)
-    #print('measured angle', angle_trunc(angle))
 
     #KALMAN MATRICIES
     #[angle, bent, distance]
@@ -243,7 +240,7 @@ def estimate_next_pos(measurement, OTHER = None):
     u = matrix([[0.], [0.], [0.]])  # external motion
     F = matrix([[1., 1., 0.], [0., 1., 0.], [0., 0., 1.]])  # next state function
     H = matrix([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.,]])  # measurement function
-    R = matrix([[4.0, 2.0, 2.0], [6.0, 2.0, 2.0], [6.0, 2.0, 6.0]])  # measurement uncertainty
+    R = matrix([[3.7, 1.0, 2.0], [2.5, 2.0, 2.0], [2.5, 2.0, 3.0]])  # measurement uncertainty
     I = matrix([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])  # identity matrix
 
 
@@ -259,35 +256,60 @@ def estimate_next_pos(measurement, OTHER = None):
 
 
         x = matrix([[angle], [0], [0]])  # initial state (location and velocity)
-        P = matrix([[3.0, 5.0, 3.0], [3.0, 6.0, 3.0], [3.0, 3.0, 7.0]])  # initial uncertainty
+        P = matrix([[7.0, 5.0, 2.0], [3.0, 5.0, 3.0], [4.0, 4.0, 3.0]])  # initial uncertainty
         OTHER = [x, P, measurement, angle]
         return (0,0), OTHER
 
     elif len(OTHER) <= 4:
 
         angle, distance = calcPolarChangeBtw2Points(OTHER[2], measurement)
-        print('unaltered actual angle', angle)
+        #print('unaltered actual angle', angle)
         angle = angle_trunc(angle)
-        print(angle, 'actual angle')
+        #print(angle, 'actual angle')
 
         a0 = angle_trunc(angle - OTHER[3])
         d0 = distance_between(OTHER[2], measurement)
-        print('a0', a0)
-        print('d0', d0)
-
-        Z = matrix([[angle], [a0], [d0]])
+        #print('a0', a0)
+        #print('d0', d0)
 
         x = OTHER[0]
         P = OTHER[1]
+        #print('x', x)
 
-        print('x', x)
+        resid = x.value[0][0] - angle
+
+        if abs(resid) > pi:
+            #print('SKIP')
+
+            x_n = (F * x) + u
+            P_n = F * P * F.transpose()
+
+            OTHER = [x_n, P_n, measurement, angle]
+
+            vals = x_n.value
+            vals[0][0] = angle_trunc(vals[0][0])
+            x_n.setValue(vals)
+
+
+            X_n, Y_n = measurement
+            #print('xn angle', x_n.value[0][0])
+            #print('xn angle trunc', angle_trunc(x_n.value[0][0]))
+            #print('------')
+            X_n += x_n.value[2][0] * cos(x_n.value[0][0])
+            Y_n += x_n.value[2][0] * sin(x_n.value[0][0])
+            xy_estimate = (X_n, Y_n)
+
+            return xy_estimate, OTHER
+
+        Z = matrix([[angle], [a0], [d0]])
+
 
         y = Z - (H * x)
-        print('y', y)
+        #print('y', y)
         S = H * P * H.transpose() + R
         K = P * H.transpose() * S.inverse()
         x = x + (K * y)
-        print('Kalman Gain', (K * y))
+        #print('Kalman Gain', (K * y))
         P = (I - (K * H)) * P
 
         #prediction
@@ -306,9 +328,9 @@ def estimate_next_pos(measurement, OTHER = None):
         #print('d', x_n.value[1][0])
 
         X_n, Y_n = measurement
-        print('xn angle', x_n.value[0][0])
-        print('xn angle trunc', angle_trunc(x_n.value[0][0]))
-        print('------')
+        #print('xn angle', x_n.value[0][0])
+        #print('xn angle trunc', angle_trunc(x_n.value[0][0]))
+        #print('------')
         X_n += x_n.value[2][0] * cos(x_n.value[0][0])
         Y_n += x_n.value[2][0] * sin(x_n.value[0][0])
         xy_estimate = (X_n, Y_n)
@@ -364,8 +386,7 @@ def naive_next_pos(measurement, OTHER = None):
 # This is how we create a target bot. Check the robot.py file to understand
 # How the robot class behaves.
 test_target = robot(2.1, 4.3, 0.5, 2*pi / 34.0, 1.5)
-measurement_noise = 0.05 * test_target.distance * 0
-print('noise', measurement_noise)
+measurement_noise = 0.05 * test_target.distance
 test_target.set_noise(0.0, 0.0, measurement_noise)
 
 demo_grading(estimate_next_pos, test_target)

@@ -104,7 +104,6 @@ def estimate_next_pos(measurement, OTHER=None):
         OTHER = [measurement, d, angle_0, r]
         # You must return xy_estimate (x, y), and OTHER (even if it is None)
         # in this order for grading purposes.
-    print('other', OTHER)
 
     return xy_estimate, OTHER
 
