@@ -48,7 +48,7 @@ class robot:
         self.heading = angle_trunc(self.heading)
         self.x += distance * cos(self.heading)
         self.y += distance * sin(self.heading)
-        print('robot angle', self.heading)
+        #print('robot angle', self.heading)
 
     def move_in_circle(self):
         """This function is used to advance the runaway target bot."""

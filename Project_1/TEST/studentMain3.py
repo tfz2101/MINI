@@ -225,7 +225,7 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
     # the progress of the hunt (or maybe some localization information). Your return format
     # must be as follows in order to be graded properly.
 
-    # OTHER = [x, P, measurement_l, angle_l, hunter_position, hunter_bearing, initial_distance]
+    # OTHER = [x, P, measurement_l, angle_l, hunter_position, hunter_bearing]
 
 
     # KALMAN MATRICIES
@@ -235,34 +235,32 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
 
     move_measurement = measurement
 
-
     u = matrix([[0.], [0.], [0.]])  # external motion
     F = matrix([[1., 1., 0.], [0., 1., 0.], [0., 0., 1.]])  # next state function
     H = matrix([[1., 0., 0.], [0., 1., 0.], [0., 0., 1., ]])  # measurement function
-    R = matrix([[1.0, 0.3, 0.3], [1.0, 0.3, 0.3], [0.3, 0.3, 1.0]])  # measurement uncertainty
+    R = matrix([[0.3, 0.1, 0.1], [0.1, 0.3, 0.1], [0.1, 0.1, 0.3]])  # measurement uncertainty
     I = matrix([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])  # identity matrix
 
     if OTHER == None:
         measurement_l = measurement
-        initial_distance = distance_between(hunter_position, measurement)
-        OTHER = [measurement_l, hunter_position, hunter_heading, initial_distance]
+        OTHER = [measurement_l, hunter_position, hunter_heading]
 
 
-    elif len(OTHER) <= 4:
+    elif len(OTHER) <= 3:
         angle, distance = calcPolarChangeBtw2Points(OTHER[0], measurement)
         angle = angle_trunc(angle)
 
         x = matrix([[angle], [0], [0]])  # initial state (location and velocity)
-        P = matrix([[5.0, 1.0, 1.0], [1.0, 5.0, 1.0], [1.0, 1.0, 5.0]])  # initial uncertainty
-        OTHER = [x, P, measurement, angle, hunter_position, hunter_heading, OTHER[3]]
+        P = matrix([[7.0, 2.0, 2.0], [2.0, 7.0, 2.0], [2.0, 2.0, 7.0]])  # initial uncertainty
+        OTHER = [x, P, measurement, angle, hunter_position, hunter_heading]
 
 
-    elif len(OTHER) <= 7:
+    elif len(OTHER) <= 6:
 
         angle, distance = calcPolarChangeBtw2Points(OTHER[2], measurement)
         #print('unaltered actual angle', angle)
         angle = angle_trunc(angle)
-        print(angle, 'actual angle')
+        #print(angle, 'actual angle')
 
         a0 = angle_trunc(angle - OTHER[3])
         d0 = distance_between(OTHER[2], measurement)
@@ -271,17 +269,17 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
 
         x = OTHER[0]
         P = OTHER[1]
-        print('x', x)
+        #print('x', x)
 
         resid = x.value[0][0] - angle
 
-        if abs(resid) > abs(4 * a0):
-            print('SKIP')
+        if abs(resid) > pi:
+            #print('SKIP')
 
             x_n = (F * x) + u
             P_n = F * P * F.transpose()
 
-            OTHER = [x_n, P_n, measurement, angle, hunter_position, hunter_heading, OTHER[6]]
+            OTHER = [x_n, P_n, measurement, angle, hunter_position, hunter_heading]
 
             vals = x_n.value
             vals[0][0] = angle_trunc(vals[0][0])
@@ -290,9 +288,10 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
             X_n, Y_n = measurement
             #print('xn angle', x_n.value[0][0])
             #print('xn angle trunc', angle_trunc(x_n.value[0][0]))
-            print('------')
+            #print('------')
             X_n += x_n.value[2][0] * cos(x_n.value[0][0])
             Y_n += x_n.value[2][0] * sin(x_n.value[0][0])
+            move_measurement = (X_n, Y_n)
 
         else:
             Z = matrix([[angle], [a0], [d0]])
@@ -313,59 +312,23 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
             vals[0][0] = angle_trunc(vals[0][0])
             x_n.setValue(vals)
 
-            OTHER = [x_n, P_n, measurement, angle, hunter_position, hunter_heading, OTHER[6]]
+            OTHER = [x_n, P_n, measurement, angle]
+
 
             X_n, Y_n = measurement
             #print('xn angle', x_n.value[0][0])
             #print('xn angle trunc', angle_trunc(x_n.value[0][0]))
-            print('------')
+            #print('------')
             X_n += x_n.value[2][0] * cos(x_n.value[0][0])
             Y_n += x_n.value[2][0] * sin(x_n.value[0][0])
-
-        target_distance = distance_between(hunter_position, measurement)
-        print('target position', measurement)
-        print('hunter position', hunter_position)
-        print('distance btw bots', target_distance)
-        steps_ahead = 1
-        if target_distance >= hunter.distance * 2:
-            steps_ahead = 2
-        elif target_distance >= hunter.distance * 1.0:
-            steps_ahead = 2
-        elif target_distance >= 0.0:
-            steps_ahead = 1
-
-        print('steps ahead', steps_ahead)
-        X_sim, Y_sim = measurement
-        bearing_sim = x.value[0][0]
-        turn_sim = x.value[1][0]
-        distance_sim = x.value[2][0]
-        simbot = robot(X_sim, Y_sim, bearing_sim, turn_sim, distance_sim)
-        for i in range(0, steps_ahead):
-            print('simbot moving!')
-            simbot.move_in_circle()
-        move_measurement = simbot.sense()
+            move_measurement = (X_n, Y_n)
 
 
 
-    heading_to_target, move_distance = calcPolarChangeBtw2Points(hunter_position, move_measurement)
-    heading_to_target = angle_trunc(heading_to_target)
-
-    print('current hunter heading', hunter_heading)
-    print('current angle target', heading_to_target)
-    '''
-    if heading_to_target * hunter_heading >= 0:
-        heading_difference = heading_to_target - hunter_heading
-    else:
-        if heading_to_target < 0 and hunter_heading > 0:
-            heading_difference = heading_to_target + 2*pi - hunter_heading
-        elif heading_to_target > 0 and hunter_heading < 0:
-            heading_difference = heading_to_target - 2 * pi - hunter_heading
-    
+    heading_to_target = get_heading(hunter_position, move_measurement)
+    heading_difference = heading_to_target - hunter_heading
     turning = heading_difference  # turn towards the target
-    '''
-    turning = heading_to_target - hunter_heading
-    turning = angle_trunc(turning)
-    print('how much the robot should turn', turning)
+    move_distance = distance_between(hunter_position, move_measurement)
     distance = min(max_distance, move_distance)  # full speed ahead!
 
     return turning, distance, OTHER
@@ -382,7 +345,7 @@ def demo_grading(hunter_bot, target_bot, next_move_fcn, OTHER=None):
     """Returns True if your next_move_fcn successfully guides the hunter_bot
     to the target_bot. This function is here to help you understand how we
     will grade your submission."""
-    max_distance = 0.98 * target_bot.distance  # 0.98 is an example. It will change.
+    max_distance = 1.94 * target_bot.distance  # 1.94 is an example. It will change.
     separation_tolerance = 0.02 * target_bot.distance  # hunter must be within 0.02 step size to catch target
     caught = False
     ctr = 0
@@ -410,11 +373,9 @@ def demo_grading(hunter_bot, target_bot, next_move_fcn, OTHER=None):
             distance = max_distance
 
         # We move the hunter according to your instructions
-        print('Hunter Bot Moving')
         hunter_bot.move(turning, distance)
 
         # The target continues its (nearly) circular motion.
-        print('Target Bot Moving')
         target_bot.move_in_circle()
 
         ctr += 1
@@ -461,124 +422,11 @@ def naive_next_move(hunter_position, hunter_heading, target_measurement, max_dis
     distance = max_distance  # full speed ahead!
     return turning, distance, OTHER
 
-
-GLOBAL_PARAMETERS = [None,
-
-        {'test_case': 1,
-     'target_x': 6.38586153722,
-     'target_y': 13.4105567386,
-     'target_heading': 2.47241215877,
-     'target_period': -25,
-     'target_speed': 3.79845282159,
-     'hunter_x': -4.15461096841,
-     'hunter_y': -0.3225704554,
-     'hunter_heading': 2.53575760878
-    },
-    {'test_case': 2,
-     'target_x': 16.585052609,
-     'target_y': 9.0679044122,
-     'target_heading': -1.35786342037,
-     'target_period': -37,
-     'target_speed': 1.28476921126,
-     'hunter_x': 10.8662448888,
-     'hunter_y': 14.7856356957,
-     'hunter_heading': 0.356152836897
-    },
-    {'test_case': 3,
-     'target_x': 14.2062592559,
-     'target_y': -18.0245447208,
-     'target_heading': -2.38262617883,
-     'target_period': -49,
-     'target_speed': 1.83862303037,
-     'hunter_x': -2.82628668059,
-     'hunter_y': -8.94637942004,
-     'hunter_heading': -0.220346285164
-    },
-    {'test_case': 4,
-     'target_x': -11.8110077747,
-     'target_y': -18.6564535804,
-     'target_heading': -1.96611401851,
-     'target_period': 43,
-     'target_speed': 1.63703150728,
-     'hunter_x': -11.6275149175,
-     'hunter_y': 5.79288354591,
-     'hunter_heading': -0.167236690344
-    },
-    {'test_case': 5,
-     'target_x': 15.6527729222,
-     'target_y': -0.647477557818,
-     'target_heading': 2.53763865986,
-     'target_period': -25,
-     'target_speed': 3.30090641473,
-     'hunter_x': 4.89061164952,
-     'hunter_y': -3.67364934482,
-     'hunter_heading': 0.69375353171
-    },
-    {'test_case': 6,
-     'target_x': 4.19064615709,
-     'target_y': -1.18147110409,
-     'target_heading': -1.64836474843,
-     'target_period': 15,
-     'target_speed': 3.83139058798,
-     'hunter_x': 1.58465033057,
-     'hunter_y': -11.608873745,
-     'hunter_heading': -1.71836625476
-    },
-    {'test_case': 7,
-     'target_x': -14.9126298507,
-     'target_y': 9.77381651339,
-     'target_heading': -2.6049812496,
-     'target_period': 15,
-     'target_speed': 1.87228826655,
-     'hunter_x': -1.73542429642,
-     'hunter_y': 15.2209669071,
-     'hunter_heading': -3.11279669928
-    },
-    {'test_case': 8,
-     'target_x': -7.36186590331,
-     'target_y': -16.8073975689,
-     'target_heading': -0.521095102947,
-     'target_period': 16,
-     'target_speed': 1.99556521539,
-     'hunter_x': -12.4391297878,
-     'hunter_y': -17.4403250837,
-     'hunter_heading': -2.7562509168
-    },
-    {'test_case': 9,
-     'target_x': 8.12973829475,
-     'target_y': -10.7703982486,
-     'target_heading': -1.99007409394,
-     'target_period': 50,
-     'target_speed': 2.79327564984,
-     'hunter_x': -6.10424606902,
-     'hunter_y': -18.9750820343,
-     'hunter_heading': -0.0275542431845
-    },
-    {'test_case': 10,
-     'target_x': -18.2934552906,
-     'target_y': 16.3903453417,
-     'target_heading': 0.345582694568,
-     'target_period': -16,
-     'target_speed': 3.99258090205,
-     'hunter_x': -18.1103477129,
-     'hunter_y': 5.2801933801,
-     'hunter_heading': 1.29663175758
-    },
-]
-
-
-
-
-
-NUM = 10
-
-#target = robot(0.0, 10.0, 0.0, 2*pi / 30, 1.5)
-target = robot(GLOBAL_PARAMETERS[NUM]['target_x'], GLOBAL_PARAMETERS[NUM]['target_y'], GLOBAL_PARAMETERS[NUM]['target_heading'], 2*pi / GLOBAL_PARAMETERS[NUM]['target_period'], GLOBAL_PARAMETERS[NUM]['target_speed'])
-
+target = robot(0.0, 10.0, 0.0, 2*pi / 30, 1.5)
 measurement_noise = .05*target.distance
 target.set_noise(0.0, 0.0, measurement_noise)
 
-hunter = robot(GLOBAL_PARAMETERS[NUM]['hunter_x'], GLOBAL_PARAMETERS[NUM]['hunter_y'], GLOBAL_PARAMETERS[NUM]['hunter_heading'])
+hunter = robot(-10.0, -10.0, 0.0)
 
 demo_grading(hunter, target, next_move)
 

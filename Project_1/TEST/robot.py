@@ -9,8 +9,8 @@ def angle_trunc(a):
 
 class robot:
 
-    def __init__(self, x = 0.0, y = 0.0, heading = 0.0, turning = 2*pi/10, distance = 1.0):
-        """This function is called when you create a new robot. It sets some of
+    def __init__(self, x = 0.0, y = 0.0, heading = 0.0, turning = 2*pi/10, distance = 1.0, line_length  = 1 ):
+        """This function is called when you create a new robot. It sets some of 
         the attributes of the robot, either to their default values or to the values
         specified when it is created."""
         self.x = x
@@ -18,9 +18,12 @@ class robot:
         self.heading = heading
         self.turning = turning # only applies to target robots who constantly move in a circle
         self.distance = distance # only applies to target bot, who always moves at same speed.
+        self.line_length = line_length  #If not one, robot moves in straight lines for line_length steps.
+        self.line_count = 0	#How many straight segments have we done with no turn so far?
         self.turning_noise    = 0.0
         self.distance_noise    = 0.0
         self.measurement_noise = 0.0
+
 
 
     def set_noise(self, new_t_noise, new_d_noise, new_m_noise):
@@ -53,9 +56,20 @@ class robot:
         """This function is used to advance the runaway target bot."""
         self.move(self.turning, self.distance)
 
+    def move_in_polygon(self):
+        """This function is used to advance the runaway target bot in a polygon shape."""
+
+        if self.line_count == self.line_length:
+           self.move_in_circle()
+           self.line_count = 0
+        else:
+           self.move(0.0, self.distance)
+     
+        self.line_count = self.line_count + 1
+
     def sense(self):
         """This function represents the robot sensing its location. When
-        measurements are noisy, this will return a value that is close to,
+        measurements are noisy, this will return a value that is close to, 
         but not necessarily equal to, the robot's (x, y) position."""
         return (random.gauss(self.x, self.measurement_noise),
                 random.gauss(self.y, self.measurement_noise))
@@ -63,5 +77,3 @@ class robot:
     def __repr__(self):
         """This allows us to print a robot's position"""
         return '[%.5f, %.5f]'  % (self.x, self.y)
-
-

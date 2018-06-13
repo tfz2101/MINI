@@ -30,7 +30,7 @@ except Exception as e:
     print "Error importing studentMain3:", e
 
 try:
-    import studentMainN4
+    import studentMain4
 except Exception as e:
     print "Error importing studentMain4:", e
 
@@ -408,7 +408,7 @@ class Part4TestCase(GenericPartTestCase):
         params['noise_ratio'] = 0.05
         params['speed_ratio'] = 0.99
         params['test_method'] = simulate_with_hunter
-        params['student_method'] = studentMainN4.next_move
+        params['student_method'] = studentMain4.next_move
 
 
 

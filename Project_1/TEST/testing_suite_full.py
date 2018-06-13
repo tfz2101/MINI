@@ -51,105 +51,115 @@ CREDIT_PER_PASS = 2.5 # points
 
 GLOBAL_PARAMETERS = [None,
 
-        {'test_case': 1,
-     'target_x': 6.38586153722,
-     'target_y': 13.4105567386,
-     'target_heading': 2.47241215877,
-     'target_period': -25,
-     'target_speed': 3.79845282159,
-     'hunter_x': -4.15461096841,
-     'hunter_y': -0.3225704554,
-     'hunter_heading': 2.53575760878
+     {'test_case': 1,
+     'target_x': 9.84595717195,
+     'target_y': -3.82584680823,
+     'target_heading': 1.95598927002,
+     'target_period': -6,
+     'target_speed': 2.23288537085,
+     'target_line_length': 12, 
+     'hunter_x': -18.9289073476,
+     'hunter_y': 18.7870153895,
+     'hunter_heading': -1.94407132569
     },
     {'test_case': 2,
-     'target_x': 16.585052609,
-     'target_y': 9.0679044122,
-     'target_heading': -1.35786342037,
-     'target_period': -37,
-     'target_speed': 1.28476921126,
-     'hunter_x': 10.8662448888,
-     'hunter_y': 14.7856356957,
-     'hunter_heading': 0.356152836897
+     'target_x': 9.26465282849,
+     'target_y': -5.37198134722,
+     'target_heading': 1.50733100266,
+     'target_period': -3,
+     'target_speed': 4.97835577487,
+     'target_line_length': 15, 
+     'hunter_x': -18.7956415381,
+     'hunter_y': 12.4047226453,
+     'hunter_heading': -1.35305387284
     },
     {'test_case': 3,
-     'target_x': 14.2062592559,
-     'target_y': -18.0245447208,
-     'target_heading': -2.38262617883,
-     'target_period': -49,
-     'target_speed': 1.83862303037,
-     'hunter_x': -2.82628668059,
-     'hunter_y': -8.94637942004,
-     'hunter_heading': -0.220346285164
+     'target_x': -8.23729263767,
+     'target_y': 0.167449172934,
+     'target_heading': -2.90891604491,
+     'target_period': -8,
+     'target_speed': 2.86280919028,
+     'target_line_length': 5, 
+     'hunter_x': -1.26626321675,
+     'hunter_y': 10.2766202621,
+     'hunter_heading': -2.63089786461
     },
     {'test_case': 4,
-     'target_x': -11.8110077747,
-     'target_y': -18.6564535804,
-     'target_heading': -1.96611401851,
-     'target_period': 43,
-     'target_speed': 1.63703150728,
-     'hunter_x': -11.6275149175,
-     'hunter_y': 5.79288354591,
-     'hunter_heading': -0.167236690344
+     'target_x': -2.18967022691,
+     'target_y': 0.255925949831,
+     'target_heading': 2.69251137563,
+     'target_period': -12,
+     'target_speed': 2.74140955105,
+     'target_line_length': 15, 
+     'hunter_x': 4.07484976298,
+     'hunter_y': -10.5384658671,
+     'hunter_heading': 2.73294117637
     },
     {'test_case': 5,
-     'target_x': 15.6527729222,
-     'target_y': -0.647477557818,
-     'target_heading': 2.53763865986,
-     'target_period': -25,
-     'target_speed': 3.30090641473,
-     'hunter_x': 4.89061164952,
-     'hunter_y': -3.67364934482,
-     'hunter_heading': 0.69375353171
+     'target_x': 0.363231634197,
+     'target_y': 15.3363820727,
+     'target_heading': 1.00648485361,
+     'target_period': 7,
+     'target_speed': 4.01304863745,
+     'target_line_length': 15, 
+     'hunter_x': -19.6386687235,
+     'hunter_y': -13.6078079345,
+     'hunter_heading': -2.18960549765
     },
     {'test_case': 6,
-     'target_x': 4.19064615709,
-     'target_y': -1.18147110409,
-     'target_heading': -1.64836474843,
-     'target_period': 15,
-     'target_speed': 3.83139058798,
-     'hunter_x': 1.58465033057,
-     'hunter_y': -11.608873745,
-     'hunter_heading': -1.71836625476
+     'target_x': 19.8033444747,
+     'target_y': 15.8607456499,
+     'target_heading': 2.91674681677,
+     'target_period': 10,
+     'target_speed': 4.11574616586,
+     'target_line_length': 1, 
+     'hunter_x': -13.483627167,
+     'hunter_y': 7.60284054436,
+     'hunter_heading': 2.45511184918
     },
     {'test_case': 7,
-     'target_x': -14.9126298507,
-     'target_y': 9.77381651339,
-     'target_heading': -2.6049812496,
-     'target_period': 15,
-     'target_speed': 1.87228826655,
-     'hunter_x': -1.73542429642,
-     'hunter_y': 15.2209669071,
-     'hunter_heading': -3.11279669928
+     'target_x': -17.2113204789,
+     'target_y': 10.5496426749,
+     'target_heading': -2.07830482038,
+     'target_period': 3,
+     'target_speed': 4.58689282387,
+     'target_line_length': 10, 
+     'hunter_x': -7.95068213364,
+     'hunter_y': -4.00088251391,
+     'hunter_heading': 0.281505756944
     },
     {'test_case': 8,
-     'target_x': -7.36186590331,
-     'target_y': -16.8073975689,
-     'target_heading': -0.521095102947,
-     'target_period': 16,
-     'target_speed': 1.99556521539,
-     'hunter_x': -12.4391297878,
-     'hunter_y': -17.4403250837,
-     'hunter_heading': -2.7562509168
+     'target_x': 10.5639252231,
+     'target_y': 13.9095062695,
+     'target_heading': -2.92543870157,
+     'target_period': 10,
+     'target_speed': 2.2648280036,
+     'target_line_length': 11, 
+     'hunter_x': 4.8678066293,
+     'hunter_y': 4.61870594164,
+     'hunter_heading': 0.356679261444
     },
     {'test_case': 9,
-     'target_x': 8.12973829475,
-     'target_y': -10.7703982486,
-     'target_heading': -1.99007409394,
-     'target_period': 50,
-     'target_speed': 2.79327564984,
-     'hunter_x': -6.10424606902,
-     'hunter_y': -18.9750820343,
-     'hunter_heading': -0.0275542431845
+     'target_x': 13.6383033581,
+     'target_y': -19.2494482213,
+     'target_heading': 3.08457233661,
+     'target_period': -5,
+     'target_speed': 4.8813691359,
+     'target_line_length': 8, 
+     'hunter_x': -0.414540470517,
+     'hunter_y': 13.2698415309,
+     'hunter_heading': -2.21974457597
     },
     {'test_case': 10,
-     'target_x': -18.2934552906,
-     'target_y': 16.3903453417,
-     'target_heading': 0.345582694568,
-     'target_period': -16,
-     'target_speed': 3.99258090205,
-     'hunter_x': -18.1103477129,
-     'hunter_y': 5.2801933801,
-     'hunter_heading': 1.29663175758
+     'target_x': -2.97944715844,
+     'target_y': -18.7085807377,
+     'target_heading': 2.80820284661,
+     'target_period': 8,
+     'target_speed': 3.67540398247,
+     'target_line_length': 8, 
+     'hunter_x': 16.7631157868,
+     'hunter_y': 8.8386686632,
+     'hunter_heading': -2.91906838766
     },
 
 ]
@@ -237,7 +247,8 @@ def simulate_without_hunter(params):
                          params['target_y'],
                          params['target_heading'],
                          2.0 * PI / params['target_period'],
-                         params['target_speed'])
+                         params['target_speed'],
+			 params['target_line_length'])
     target.set_noise(0.0,
                      0.0,
                      params['noise_ratio'] * params['target_speed'])
@@ -254,7 +265,7 @@ def simulate_without_hunter(params):
 
         estimate, other_info = estimate_next_pos(target_meas, other_info)
 
-        target.move_in_circle()
+        target.move_in_polygon()
         target_pos = (target.x, target.y)
 
         separation = distance(estimate, target_pos)
@@ -274,7 +285,8 @@ def simulate_with_hunter(params):
                          params['target_y'],
                          params['target_heading'],
                          2.0 * PI / params['target_period'],
-                         params['target_speed'])
+                         params['target_speed'],
+	 		 params['target_line_length'])
     target.set_noise(0.0,
                      0.0,
                      params['noise_ratio'] * params['target_speed'])
@@ -306,7 +318,7 @@ def simulate_with_hunter(params):
         turn = truncate_angle(turn)
 
         hunter.move(turn, dist)
-        target.move_in_circle()
+        target.move_in_polygon()
 
         steps += 1
 
@@ -414,8 +426,8 @@ class Part4TestCase(GenericPartTestCase):
 
 
 suites = map(lambda x: unittest.TestSuite(unittest.TestLoader().loadTestsFromTestCase(x)), 
-    [Part1TestCase, Part2TestCase, Part3TestCase, Part4TestCase])
-    #[Part1TestCase])
+    [Part1TestCase, Part2TestCase, Part3TestCase, Part4TestCase ])
+
 total_passes = 0
 
 for i, suite in zip(range(1,1+len(suites)),suites):
