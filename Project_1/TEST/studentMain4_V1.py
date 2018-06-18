@@ -236,6 +236,7 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
     move_measurement = measurement
 
     NOISE_LIMIT = 0.4
+    SEP_THRESHOLD = 0.02
 
     u = matrix([[0.], [0.], [0.]])  # external motion
     F = matrix([[1., 1., 0.], [0., 1., 0.], [0., 0., 1.]])  # next state function
@@ -245,7 +246,7 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
 
     if OTHER == None:
         measurement_l = measurement
-        length_guess = {'current': 1, 'history': [1]}
+        length_guess = {'current': 0, 'history': [1]}
         OTHER = [measurement_l, hunter_position, hunter_heading, length_guess]
 
 
@@ -253,15 +254,15 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
         angle, distance = calcPolarChangeBtw2Points(OTHER[0], measurement)
         angle = angle_trunc(angle)
 
-        length_guess = OTHER[3]
+        length_guess = {'current': 0, 'history': [1]}
 
         x = matrix([[angle], [0], [0]])  # initial state (location and velocity)
         P = matrix([[5.0, 1.0, 1.0], [1.0, 5.0, 1.0], [1.0, 1.0, 5.0]])  # initial uncertainty
+        local_angle_history = [angle]
+        OTHER = [x, P, measurement, angle, hunter_position, hunter_heading, length_guess, local_angle_history]
 
-        OTHER = [x, P, measurement, angle, hunter_position, hunter_heading, length_guess]
 
-
-    elif len(OTHER) <= 7:
+    elif len(OTHER) <= 8:
         angle, distance = calcPolarChangeBtw2Points(OTHER[2], measurement)
         angle = angle_trunc(angle)
         print(angle, 'actual angle')
@@ -274,15 +275,25 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
         P = OTHER[1]
 
         length_guess = OTHER[6]
+        local_angle_history = OTHER[7]
 
+        length_guess['current'] = length_guess['current'] + 1
         if abs(a0) <= NOISE_LIMIT:
-            length_guess['current'] = length_guess['current'] + 1
+            local_angle_history.append(angle)
+
+            vals = x.value
+            print('angle before average', vals[0][0])
+            vals[0][0] = angle * 1.0/ length_guess['history'][-1] +  (length_guess['history'][-1] - 1) / length_guess['history'][-1] * vals[0][0]
+            print('angle after average', vals[0][0])
+            x.setValue(vals)
+
             x_n = x
             P_n = P
 
         else:
+            local_angle_history = [angle]
             length_guess['history'].append(length_guess['current'])
-            length_guess['current'] = 1
+            length_guess['current'] = 0
 
             print('x', x)
             resid = x.value[0][0] - angle
@@ -292,17 +303,6 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
 
                 x_n = (F * x) + u
                 P_n = F * P * F.transpose()
-
-                vals = x_n.value
-                vals[0][0] = angle_trunc(vals[0][0])
-                x_n.setValue(vals)
-
-                X_n, Y_n = measurement
-                #print('xn angle', x_n.value[0][0])
-                #print('xn angle trunc', angle_trunc(x_n.value[0][0]))
-
-                X_n += x_n.value[2][0] * cos(x_n.value[0][0])
-                Y_n += x_n.value[2][0] * sin(x_n.value[0][0])
 
             else:
                 Z = matrix([[angle], [a0], [d0]])
@@ -319,57 +319,74 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
                 x_n = (F * x) + u
                 P_n = F * P * F.transpose()
 
-                vals = x_n.value
-                vals[0][0] = angle_trunc(vals[0][0])
-                x_n.setValue(vals)
+            vals = x_n.value
+            vals[0][0] = angle_trunc(vals[0][0])
+            x_n.setValue(vals)
 
 
-                X_n, Y_n = measurement
-                #print('xn angle', x_n.value[0][0])
-                #print('xn angle trunc', angle_trunc(x_n.value[0][0]))
 
-                X_n += x_n.value[2][0] * cos(x_n.value[0][0])
-                Y_n += x_n.value[2][0] * sin(x_n.value[0][0])
-
-
-        OTHER = [x_n, P_n, measurement, angle, hunter_position, hunter_heading, OTHER[6]]
+        OTHER = [x_n, P_n, measurement, angle, hunter_position, hunter_heading, length_guess, local_angle_history]
         target_distance = distance_between(hunter_position, measurement)
 
-        print('target position', measurement)
-        print('hunter position', hunter_position)
+        #print('target position', measurement)
+        #print('hunter position', hunter_position)
         print('distance btw bots', target_distance)
 
         X_sim, Y_sim = measurement
 
         #bearing_sim = x.value[0][0]
         bearing_sim = angle
+        #bearing_sim = float(sum(local_angle_history))/len(local_angle_history)
 
         turn_sim = x.value[1][0]
         distance_sim = x.value[2][0]
-        length_sim = length_guess['history'][-1] - length_guess['current']
+        length_sim_partial = max(1, length_guess['history'][-1] - length_guess['current'])
+        print('partial sim length', length_sim_partial)
+        length_sim = length_guess['history'][-1]
         print('current length guess', length_sim)
-        simbot = robot(X_sim, Y_sim, bearing_sim, turn_sim, distance_sim, length_sim)
+        simbot_partial = robot(X_sim, Y_sim, bearing_sim, turn_sim, distance_sim, length_sim_partial)
 
-        for i in range(1, 100):
-            simbot.move_in_polygon()
-            simxy = simbot.sense()
+
+        isReached = False
+        for i in range(1, length_sim_partial+1):
+            simbot_partial.move(turning=0, distance=simbot_partial.distance)
+            simxy = simbot_partial.sense()
             dis = distance_between(hunter_position, simxy)
             if (i * float(hunter.distance)) >= dis:
                 move_measurement = simxy
+                isReached = True
                 print('i is this', i)
+                print('need to move this much to reach target', dis)
                 break
+
+        if isReached == False:
+            X_sim, Y_sim = simbot_partial.sense()
+            bearing_sim = simbot_partial.heading
+            turn_sim = simbot_partial.turning
+            distance_sim = simbot_partial.distance
+            simbot = robot(X_sim, Y_sim, bearing_sim, turn_sim, distance_sim, length_sim)
+            for i in range(1, 100):
+                simbot.move_in_polygon()
+                simxy = simbot.sense()
+                dis = distance_between(hunter_position, simxy)
+                if (i * float(hunter.distance)) >= dis:
+                    move_measurement = simxy
+                    print('i is this', i)
+                    print('need to move this much to reach target', dis)
+                    break
 
         print('------')
 
     heading_to_target, move_distance = calcPolarChangeBtw2Points(hunter_position, move_measurement)
     heading_to_target = angle_trunc(heading_to_target)
 
-    print('current hunter heading', hunter_heading)
-    print('current angle target', heading_to_target)
+    #print('current hunter heading', hunter_heading)
+    #print('current angle target', heading_to_target)
     turning = heading_to_target - hunter_heading
     turning = angle_trunc(turning)
-    #print('how much the robot should turn', turning)
     distance = min(max_distance, move_distance)  # full speed ahead!
+
+
 
     return turning, distance, OTHER
 
