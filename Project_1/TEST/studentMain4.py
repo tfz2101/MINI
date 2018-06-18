@@ -346,7 +346,7 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
 
         turn_sim = x.value[1][0]
         distance_sim = x.value[2][0]
-        length_sim = length_guess['history'][-1]
+        length_sim = length_guess['history'][-1] - length_guess['current']
         print('current length guess', length_sim)
         simbot = robot(X_sim, Y_sim, bearing_sim, turn_sim, distance_sim, length_sim)
 
