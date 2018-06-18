@@ -225,7 +225,7 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
     # the progress of the hunt (or maybe some localization information). Your return format
     # must be as follows in order to be graded properly.
 
-    # OTHER = [x, P, measurement_l, angle_l, hunter_position, hunter_bearing, initial_distance]
+    # OTHER = [x, P, measurement_l, angle_l, hunter_position, hunter_bearing, length_guess]
 
 
     # KALMAN MATRICIES
@@ -235,6 +235,7 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
 
     move_measurement = measurement
 
+    NOISE_LIMIT = 0.4
 
     u = matrix([[0.], [0.], [0.]])  # external motion
     F = matrix([[1., 1., 0.], [0., 1., 0.], [0., 0., 1.]])  # next state function
@@ -244,152 +245,127 @@ def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
 
     if OTHER == None:
         measurement_l = measurement
-        initial_distance = distance_between(hunter_position, measurement)
-        OTHER = [measurement_l, hunter_position, hunter_heading, initial_distance]
+        length_guess = {'current': 1, 'history': [1]}
+        OTHER = [measurement_l, hunter_position, hunter_heading, length_guess]
 
 
     elif len(OTHER) <= 4:
         angle, distance = calcPolarChangeBtw2Points(OTHER[0], measurement)
         angle = angle_trunc(angle)
 
+        length_guess = OTHER[3]
+
         x = matrix([[angle], [0], [0]])  # initial state (location and velocity)
         P = matrix([[5.0, 1.0, 1.0], [1.0, 5.0, 1.0], [1.0, 1.0, 5.0]])  # initial uncertainty
-        OTHER = [x, P, measurement, angle, hunter_position, hunter_heading, OTHER[3]]
+
+        OTHER = [x, P, measurement, angle, hunter_position, hunter_heading, length_guess]
 
 
     elif len(OTHER) <= 7:
-
         angle, distance = calcPolarChangeBtw2Points(OTHER[2], measurement)
-        #print('unaltered actual angle', angle)
         angle = angle_trunc(angle)
-        #print(angle, 'actual angle')
+        print(angle, 'actual angle')
 
         a0 = angle_trunc(angle - OTHER[3])
         d0 = distance_between(OTHER[2], measurement)
-        #print('a0', a0)
-        #print('d0', d0)
+        print('a0', a0)
 
         x = OTHER[0]
         P = OTHER[1]
 
+        length_guess = OTHER[6]
 
-        resid = x.value[0][0] - angle
-
-        if abs(resid) > abs(4 * a0):
-            #print('SKIP')
-
-            x_n = (F * x) + u
-            P_n = F * P * F.transpose()
-
-            OTHER = [x_n, P_n, measurement, angle, hunter_position, hunter_heading, OTHER[6]]
-
-            vals = x_n.value
-            vals[0][0] = angle_trunc(vals[0][0])
-            x_n.setValue(vals)
-
-            X_n, Y_n = measurement
-            #print('xn angle', x_n.value[0][0])
-            #print('xn angle trunc', angle_trunc(x_n.value[0][0]))
-
-            X_n += x_n.value[2][0] * cos(x_n.value[0][0])
-            Y_n += x_n.value[2][0] * sin(x_n.value[0][0])
+        if abs(a0) <= NOISE_LIMIT:
+            length_guess['current'] = length_guess['current'] + 1
+            x_n = x
+            P_n = P
 
         else:
-            Z = matrix([[angle], [a0], [d0]])
+            length_guess['history'].append(length_guess['current'])
+            length_guess['current'] = 1
 
-            y = Z - (H * x)
-            #print('y', y)
-            S = H * P * H.transpose() + R
-            K = P * H.transpose() * S.inverse()
-            x = x + (K * y)
-            #print('Kalman Gain', (K * y))
-            P = (I - (K * H)) * P
+            print('x', x)
+            resid = x.value[0][0] - angle
 
-            # prediction
-            x_n = (F * x) + u
-            P_n = F * P * F.transpose()
+            if abs(resid) > 1.5 * pi:
+                print('SKIP')
 
-            vals = x_n.value
-            vals[0][0] = angle_trunc(vals[0][0])
-            x_n.setValue(vals)
+                x_n = (F * x) + u
+                P_n = F * P * F.transpose()
 
-            OTHER = [x_n, P_n, measurement, angle, hunter_position, hunter_heading, OTHER[6]]
+                vals = x_n.value
+                vals[0][0] = angle_trunc(vals[0][0])
+                x_n.setValue(vals)
 
-            X_n, Y_n = measurement
-            #print('xn angle', x_n.value[0][0])
-            #print('xn angle trunc', angle_trunc(x_n.value[0][0]))
+                X_n, Y_n = measurement
+                #print('xn angle', x_n.value[0][0])
+                #print('xn angle trunc', angle_trunc(x_n.value[0][0]))
 
-            X_n += x_n.value[2][0] * cos(x_n.value[0][0])
-            Y_n += x_n.value[2][0] * sin(x_n.value[0][0])
+                X_n += x_n.value[2][0] * cos(x_n.value[0][0])
+                Y_n += x_n.value[2][0] * sin(x_n.value[0][0])
 
+            else:
+                Z = matrix([[angle], [a0], [d0]])
+
+                y = Z - (H * x)
+                print('y', y)
+                S = H * P * H.transpose() + R
+                K = P * H.transpose() * S.inverse()
+                x = x + (K * y)
+                print('Kalman Gain', (K * y))
+                P = (I - (K * H)) * P
+
+                # prediction
+                x_n = (F * x) + u
+                P_n = F * P * F.transpose()
+
+                vals = x_n.value
+                vals[0][0] = angle_trunc(vals[0][0])
+                x_n.setValue(vals)
+
+
+                X_n, Y_n = measurement
+                #print('xn angle', x_n.value[0][0])
+                #print('xn angle trunc', angle_trunc(x_n.value[0][0]))
+
+                X_n += x_n.value[2][0] * cos(x_n.value[0][0])
+                Y_n += x_n.value[2][0] * sin(x_n.value[0][0])
+
+
+        OTHER = [x_n, P_n, measurement, angle, hunter_position, hunter_heading, OTHER[6]]
         target_distance = distance_between(hunter_position, measurement)
 
-        '''
         print('target position', measurement)
         print('hunter position', hunter_position)
         print('distance btw bots', target_distance)
-        steps_ahead = 1
-        if target_distance >= hunter.distance * 2:
-            steps_ahead = 2
-        elif target_distance >= hunter.distance * 1.0:
-            steps_ahead = 2
-        elif target_distance >= 0.0:
-            steps_ahead = 1
-        
-
-        print('steps ahead', steps_ahead)
-        X_sim, Y_sim = measurement
-        bearing_sim = x.value[0][0]
-        turn_sim = x.value[1][0]
-        distance_sim = x.value[2][0]
-        simbot = robot(X_sim, Y_sim, bearing_sim, turn_sim, distance_sim)
-        for i in range(0, steps_ahead):
-            print('simbot moving!')
-            simbot.move_in_circle()
-        move_measurement = simbot.sense()
-        print('------')
-        '''
-
-        #print('target position', measurement)
-        #print('hunter position', hunter_position)
-        #print('distance btw bots', target_distance)
-        steps_ahead = 1
 
         X_sim, Y_sim = measurement
-        bearing_sim = x.value[0][0]
+
+        #bearing_sim = x.value[0][0]
+        bearing_sim = angle
+
         turn_sim = x.value[1][0]
         distance_sim = x.value[2][0]
-        simbot = robot(X_sim, Y_sim, bearing_sim, turn_sim, distance_sim)
-        #print('simbot moving!')
+        length_sim = length_guess['history'][-1]
+        print('current length guess', length_sim)
+        simbot = robot(X_sim, Y_sim, bearing_sim, turn_sim, distance_sim, length_sim)
+
         for i in range(1, 100):
-            simbot.move_in_circle()
+            simbot.move_in_polygon()
             simxy = simbot.sense()
             dis = distance_between(hunter_position, simxy)
             if (i * float(hunter.distance)) >= dis:
                 move_measurement = simxy
-                steps_ahead = i
+                print('i is this', i)
                 break
 
-
-        #print('steps ahead', steps_ahead)
-        #print('------')
+        print('------')
 
     heading_to_target, move_distance = calcPolarChangeBtw2Points(hunter_position, move_measurement)
     heading_to_target = angle_trunc(heading_to_target)
 
-    #print('current hunter heading', hunter_heading)
-    #print('current angle target', heading_to_target)
-    '''
-    if heading_to_target * hunter_heading >= 0:
-        heading_difference = heading_to_target - hunter_heading
-    else:
-        if heading_to_target < 0 and hunter_heading > 0:
-            heading_difference = heading_to_target + 2*pi - hunter_heading
-        elif heading_to_target > 0 and hunter_heading < 0:
-            heading_difference = heading_to_target - 2 * pi - hunter_heading
-    
-    turning = heading_difference  # turn towards the target
-    '''
+    print('current hunter heading', hunter_heading)
+    print('current angle target', heading_to_target)
     turning = heading_to_target - hunter_heading
     turning = angle_trunc(turning)
     #print('how much the robot should turn', turning)
